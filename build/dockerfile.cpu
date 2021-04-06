@@ -1,0 +1,14 @@
+# FOR CUDA SUPPORT pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
+ARG BASE_IMAGE=python:3.9.2
+FROM ${BASE_IMAGE}
+
+# USER pwrai 2051:2051
+# WORKDIR /home/pwrai
+
+
+RUN /opt/anaconda/etc/profile.d/conda.sh && \
+    conda activate base && \
+    conda activate wmlce 
+    # pip install torch jupyterlab ipywidgets widgetsnbextension jupyterlab_widgets nltk pandas numpy sklearn transformers==4.3.2 pytorch-lightning==1.2.2
+
+RUN apt-get update && apt-get install -y wget unzip
