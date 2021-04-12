@@ -35,7 +35,7 @@ RUN yum install -y bzip2 bison flex
 RUN git clone git://gcc.gnu.org/git/gcc.git
 RUN cd gcc && \
     git checkout releases/gcc-${GCC_VERSION} && \
-    .gcc/contrib/download_prerequisites
+    ./contrib/download_prerequisites
 
 RUN mkdir objdir && \
     cd objdir && \

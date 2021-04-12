@@ -4,16 +4,20 @@ CUDA_IMAGES=("nvidia/cuda-ppc64le:11.2.2-cudnn8-devel-centos8" "nvidia/cuda-ppc6
 # CUDA_IMAGES=("nvidia/cuda-ppc64le:10.2-cudnn8-devel-centos7")
 # 
 #3.8.1 is tested
-# PYTHON_VERSIONS=("3.9.2" "3.8.8" "3.8.1" "3.7.10" "3.6.9")
+PYTHON_VERSIONS=("3.9.2" "3.8.8" "3.8.1" "3.7.10" "3.6.9")
 # 3.8.8 seems a bt broken when installing
-PYTHON_VERSIONS=("3.8.1")
+#PYTHON_VERSIONS=("3.8.1")
 
-# GCC_VERSIONS=("10.2" "9.3" "8.4" "7.5" "6.1")
-GCC_VERSIONS=("9.3" "8.4" "7.5")
+GCC_VERSIONS=("10.2.0" "9.3.0" "8.4.0" "7.5.0" "6.1.0")
+#GCC_VERSIONS=("10.2.0" "8.4.0" "6.1.0")
 
 
 PYTORCH_VERSIONS=("1.8.1" "1.7.1" "1.6.0" "1.5.1" "1.4.0")
-mkdir output
+
+RUN_TIMESTAMP=$(date '+%Y-%m-%d-%H_%M')
+echo $RUN_TIMESTAMP
+LOG_PATH=log/$RUN_TIMESTAMP
+mkdir -p $LOG_PATH
 
 #https://github.com/pytorch/vision/issues/2709
 
@@ -24,23 +28,38 @@ for base_image in ${CUDA_IMAGES[@]}
 do
     for p_version in ${PYTHON_VERSIONS[@]}
     do
-        for gcc_version in ${GCC_VERSIONS[@]}
+        cuda_cudnn8_os=$(awk -F: '{print $2}' <<< $base_image)
+        echo $base_image
+        echo $p_version
+
+	CUDA_PYTHON_VERSION="${cuda_cudnn8_os}-py${p_version}-small"
+        CUDA_PYTHON_TAG="${base_repository_name}:${CUDA_PYTHON_VERSION}"
+
+        LOG_FILE=$LOG_PATH/${CUDA_PYTHON_VERSION}.txt
+
+        unbuffer docker buildx build --platform linux/ppc64le -f cuda_with_python.dockerfile -t $CUDA_PYTHON_TAG --build-arg BASE_IMAGE=$base_image --build-arg PYTHON_VERSION=$p_version --progress plain . 2>&1 | tee $LOG_FILE
+       	docker push $CUDA_PYTHON_TAG 
+       	
+	for gcc_version in ${GCC_VERSIONS[@]}
         do
-            cuda_cudnn8_os=$(awk -F: '{print $2}' <<< $base_image) 
-            echo $base_image
-            echo $p_version
+            echo $gcc_version
 
             #TODO FIGURE OUT HOW TO PUT THE OUTPUT INTO A FILE
-            CACHE_TAG="${base_repository_name}:${cuda_cudnn8_os}-py${p_version}-small"
-            FINAL_TAG="${CACHE_TAG}-dependencies-gcc${gcc_version}"
-            PYTORCH_FINAL_TAG="${FINAL_TAG}-pytorch"
+            DEPENDENCIES_VERSION="${CUDA_PYTHON_VERSION}-dependencies-gcc${gcc_version}"
+            DEPENDENCIES_TAG="${base_repository_name}:${DEPENDENCIES_VERSION}"
 
-            docker buildx build --platform linux/ppc64le -f cuda_with_python.dockerfile -t $CACHE_TAG --build-arg BASE_IMAGE=$base_image --build-arg PYTHON_VERSION=$p_version --progress plain .
-            docker push $CACHE_TAG &
-            docker buildx build --platform linux/ppc64le -f pytorch-dependencies.dockerfile -t $FINAL_TAG --build-arg BASE_IMAGE=$CACHE_TAG --build-arg GCC_VERSION=$gcc_version --progress plain .
-            docker push $FINAL_TAG &
-            docker buildx build --platform linux/ppc64le -f dockerfile-pytorch.dockerfile -t $PYTORCH_FINAL_TAG --build-arg BASE_IMAGE=$FINAL_TAG --progress plain .
-            docker push $PYTORCH_FINAL_TAG
+
+
+	    PYTORCH_VERSION="${DEPENDENCIES_VERSION}-pytorch"
+            PYTORCH_TAG="${base_repository_name}:${PYTORCH_VERSION}"
+
+      	    LOG_FILE=$LOG_PATH/${DEPENDENCIES_VERSION}.txt
+            unbuffer docker buildx build --platform linux/ppc64le -f pytorch-dependencies.dockerfile -t $DEPENDENCIES_TAG --build-arg BASE_IMAGE=$CUDA_PYTHON_TAG --build-arg GCC_VERSION=$gcc_version --progress plain . 2>&1 | tee $LOG_FILE
+            docker push $DEPENDENCIES_TAG 
+
+#	    LOG_FILE=$LOG_PATH/${PYTORCH_VERSION}.txt
+ #           unbuffer docker buildx build --platform linux/ppc64le -f dockerfile-pytorch.dockerfile -t $PYTORCH_TAG --build-arg BASE_IMAGE=$DEPENDENCIES_TAG --progress plain . 2>&1 | tee $LOG_FILE
+#            docker push $PYTORCH_TAG
         done
     done
 done
