@@ -11,9 +11,9 @@ FROM ${BASE_IMAGE}
 ARG PYTHON_VERSION=3.8.1
 # docker pull 
 
-## Add repositories for dependencies for python3
-RUN yum install -y yum-utils && \
-    yum-config-manager --add-repo  http://mirror.centos.org/centos/8/PowerTools/ppc64le/os/
+## Add repositories for dependencies for python3, only for centos8 not for centos7
+RUN yum install -y yum-utils 
+#    yum-config-manager --add-repo  http://mirror.centos.org/centos/7/PowerTools/ppc64le/os/
     # yum-config-manager --add-repo http://mirror.centos.org/centos/8-stream/BaseOS/ppc64le/os/ && \
     # yum-config-manager --add-repo http://mirror.centos.org/centos/8-stream/PowerTools/ppc64le/os/
 
