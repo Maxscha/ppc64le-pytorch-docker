@@ -1,6 +1,8 @@
 ARG BASE_IMAGE=test_git
+
 FROM $BASE_IMAGE
 
+ARG PYTORCH_VERSION="v1.7.1"
 # ARG PYTHON_VERSION=3.8
 # ARG WITH_TORCHVISION=0
 # https://gist.github.com/1duo/38af1abd68a2c7fe5087532ab968574e
@@ -18,8 +20,8 @@ FROM $BASE_IMAGE
 RUN git clone --recursive https://github.com/pytorch/pytorch
 # RUN pip3 install cmake
 RUN export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which python3))/../"}
-RUN cd pytorch && git submodule sync && git submodule update --init --recursive 
-RUN cd pytorch  && python3 setup.py install
+RUN cd pytorch && git checkout $PYTORCH_VERSION && git submodule sync && git submodule update --init --recursive 
+RUN cd pytorch  && BUILD_BINARY=0 BUILD_TEST=0 TORCH_CUDA_ARCH_LIST="5.0" python3 setup.py install
 
 #https://gcc.gnu.org/wiki/InstallingGCC
 # yum install -y bzip2 bison flex
@@ -43,3 +45,4 @@ RUN cd pytorch  && python3 setup.py install
 #-- Cannot find a library with BLAS API. Not using BLAS.
 # -- Cannot find a library with LAPACK API. Not using LAPACK.
 # disabling ROCM because NOT USE_ROCM is set
+
