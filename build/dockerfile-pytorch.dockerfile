@@ -21,7 +21,9 @@ RUN git clone --recursive https://github.com/pytorch/pytorch
 # RUN pip3 install cmake
 RUN export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which python3))/../"}
 RUN cd pytorch && git checkout $PYTORCH_VERSION && git submodule sync && git submodule update --init --recursive 
-RUN cd pytorch  && BUILD_BINARY=0 BUILD_TEST=0 TORCH_CUDA_ARCH_LIST="5.0" python3 setup.py install
+
+#Tries one deployment without TORCH_CUDA_ARCH_LIST AND ONE WHERE WE SET IT PROPERLY https://pypi.org/project/torch-points-kernels/
+RUN cd pytorch  && BUILD_BINARY=0 BUILD_TEST=0 TORCH_CUDA_ARCH_LIST="7.0;7.5" python3 setup.py install
 
 #https://gcc.gnu.org/wiki/InstallingGCC
 # yum install -y bzip2 bison flex
