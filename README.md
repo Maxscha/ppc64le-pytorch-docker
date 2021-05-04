@@ -23,8 +23,9 @@ Build images can be found in the corrosponding [Dockerhub Repository](https://hu
 
 
 ### Todos
-- [ ] Add Torchvision & Torchtext
+- [X] Add Torchvision & Torchtext
 - [ ] Streamline version combinations, by reducing the number of needed dependency version. (e.g. GCC)
 - [ ] Reduce image build size
 - [ ] Add Centos8 Builds
 - [ ] Add Ubuntu-Based Builds
+- [ ] OpenBlas enabled Numpy & Scipy

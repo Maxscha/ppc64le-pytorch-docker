@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 
 ARG CMAKE_BASE_VERSION=3.18
 ARG CMAKE_VERSION=3.18.4
-ARG GCC_VERSION=9.3.0
+ARG GCC_VERSION=8.4.0
 
 RUN yum update -y && yum install -y git wget
 
